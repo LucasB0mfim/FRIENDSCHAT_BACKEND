@@ -17,7 +17,7 @@ const pool = new Pool({
 app.get('/data', async (req, res) => {
     try {
         const client = await pool.connect();
-        const result = await client.query('SELECT * tasks');
+        const result = await client.query('SELECT * FROM tasks'); // Corrigido aqui
         const results = { 'results': (result) ? result.rows : null };
         res.json(results);
         client.release();
