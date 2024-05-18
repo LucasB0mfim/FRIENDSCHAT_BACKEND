@@ -1,73 +1,34 @@
 const express = require('express');
-const mysql = require('mysql2');
-const bodyParser = require('body-parser');
-const dotenv = require('dotenv');
-
-// Carregar variáveis de ambiente do arquivo .env
-dotenv.config();
+const { Pool } = require('pg');
+require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3000;
 
-// Configurar a conexão com o banco de dados MySQL
-const db = mysql.createConnection({
-    host: process.env.DB_HOST,
+// Configuração do pool de conexão com o banco de dados
+const pool = new Pool({
     user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_DATABASE,
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE
+    port: process.env.DB_PORT,
 });
 
-// Conectar ao banco de dados
-db.connect(err => {
-    if (err) {
-        console.error('Erro ao conectar ao banco de dados: ', err);
-        return;
+// Rota de exemplo para buscar dados do banco de dados
+app.get('/data', async (req, res) => {
+    try {
+        const client = await pool.connect();
+        const result = await client.query('SELECT * tasks');
+        const results = { 'results': (result) ? result.rows : null };
+        res.json(results);
+        client.release();
+    } catch (err) {
+        console.error(err);
+        res.send("Erro ao buscar dados do banco de dados");
     }
-    console.log('Conectado ao banco de dados MySQL.');
-
-    // Criar tabela de tarefas se não existir
-    const createTableQuery = `
-        CREATE TABLE IF NOT EXISTS tasks (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            task VARCHAR(255) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    `;
-    db.query(createTableQuery, (err, result) => {
-        if (err) {
-            console.error('Erro ao criar tabela: ', err);
-            return;
-        }
-        console.log('Tabela "tasks" pronta para uso.');
-    });
 });
 
-// Middleware para analisar JSON
-app.use(bodyParser.json());
-
-// Rota para adicionar uma tarefa
-app.post('/tasks', (req, res) => {
-    const task = req.body.task;
-    const query = 'INSERT INTO tasks (task) VALUES (?)';
-    db.query(query, [task], (err, result) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        res.json({ id: result.insertId, task });
-    });
-});
-
-// Rota para obter todas as tarefas
-app.get('/tasks', (req, res) => {
-    const query = 'SELECT * FROM tasks';
-    db.query(query, (err, rows) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        res.json(rows);
-    });
-});
-
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+// Iniciando o servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Servidor iniciado na porta ${PORT}`);
 });
