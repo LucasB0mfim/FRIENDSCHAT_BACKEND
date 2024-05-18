@@ -1,8 +1,12 @@
 const express = require('express');
 const { Pool } = require('pg');
+const cors = require('cors'); // Importe o pacote cors
 require('dotenv').config();
 
 const app = express();
+
+// Use o middleware CORS
+app.use(cors());
 
 // Configuração do pool de conexão com o banco de dados
 const pool = new Pool({
