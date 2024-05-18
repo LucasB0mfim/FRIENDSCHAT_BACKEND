@@ -46,7 +46,7 @@ app.post('/tasks', async (req, res) => {
         }
 
         const client = await pool.connect();
-        const result = await client.query('INSERT INTO tasks (task, created_at) VALUES ($1, NOW()) RETURNING *', [task]);
+        const result = await client.query('INSERT INTO tasks (task) VALUES ($1) RETURNING *', [task]);
         const newTask = result.rows[0];
         client.release();
         res.status(201).json(newTask); // Retorna a nova tarefa com status 201 (Created)
