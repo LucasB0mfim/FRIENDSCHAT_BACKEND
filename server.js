@@ -11,19 +11,22 @@ const pool = new Pool({
     database: process.env.DB_DATABASE,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
+    ssl: {
+        rejectUnauthorized: false // Adicione esta configuração para evitar erros de SSL
+    }
 });
 
-// Rota de exemplo para buscar dados do banco de dados
-app.get('/data', async (req, res) => {
+// Rota para buscar dados do banco de dados
+app.get('/tasks', async (req, res) => {
     try {
         const client = await pool.connect();
-        const result = await client.query('SELECT * FROM tasks'); // Corrigido aqui
-        const results = { 'results': (result) ? result.rows : null };
-        res.json(results);
+        const result = await client.query('SELECT * FROM tasks');
+        const tasks = result.rows;
         client.release();
+        res.json(tasks);
     } catch (err) {
-        console.error(err);
-        res.send("Erro ao buscar dados do banco de dados");
+        console.error('Erro ao buscar dados do banco de dados:', err);
+        res.status(500).json({ error: 'Erro ao buscar dados do banco de dados' });
     }
 });
 
