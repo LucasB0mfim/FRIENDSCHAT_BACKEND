@@ -40,7 +40,6 @@ app.post('/tasks', async (req, res) => {
     try {
         const { task } = req.body;
 
-        // Verifique se o campo de tarefa foi fornecido
         if (!task) {
             return res.status(400).json({ error: 'O campo de tarefa é obrigatório' });
         }
@@ -49,12 +48,13 @@ app.post('/tasks', async (req, res) => {
         const result = await client.query('INSERT INTO tasks (task) VALUES ($1) RETURNING *', [task]);
         const newTask = result.rows[0];
         client.release();
-        res.status(201).json(newTask); // Retorna a nova tarefa com status 201 (Created)
+        res.status(201).json(newTask);
     } catch (err) {
         console.error('Erro ao adicionar tarefa:', err);
         res.status(500).json({ error: 'Erro ao adicionar tarefa' });
     }
 });
+
 
 // Iniciando o servidor
 const PORT = process.env.PORT || 3000;
